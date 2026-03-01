@@ -3,8 +3,31 @@
 > **Lucidia AI Models Enhanced** — Advanced model pipeline with quantization methods, LoRA adapter management, and fine-tuning job tracking.
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://python.org)
+[![npm](https://img.shields.io/badge/npm-lucidia--ai--models--enhanced-CB3837?logo=npm)](https://www.npmjs.com/package/lucidia-ai-models-enhanced)
 [![BlackRoad AI](https://img.shields.io/badge/BlackRoad-AI-FF1D6C)](https://blackroad.ai)
 [![License](https://img.shields.io/badge/license-Proprietary-black)](LICENSE)
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Architecture](#architecture)
+3. [Pipeline Stages](#pipeline-stages)
+4. [Features](#features)
+5. [Requirements](#requirements)
+6. [Installation](#installation)
+   - [Python](#python)
+   - [npm / Node.js Client](#npm--nodejs-client)
+7. [Configuration](#configuration)
+   - [Quantization Method Comparison](#quantization-method-comparison)
+8. [Usage](#usage)
+   - [CLI](#cli)
+   - [Python API](#python-api)
+9. [API Reference](#api-reference)
+10. [Billing & Stripe Integration](#billing--stripe-integration)
+11. [Running Tests](#running-tests)
+12. [Database Schema](#database-schema)
 
 ---
 
@@ -93,11 +116,35 @@ Stage 3: Fine-Tuning
 
 ## Installation
 
+### Python
+
 ```bash
 git clone https://github.com/BlackRoad-AI/lucidia-ai-models-enhanced.git
 cd lucidia-ai-models-enhanced
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+### npm / Node.js Client
+
+A lightweight Node.js client is available for integrating Lucidia AI Models Enhanced into JavaScript and TypeScript projects.
+
+```bash
+npm install lucidia-ai-models-enhanced
+```
+
+```js
+const { LucidiaClient } = require('lucidia-ai-models-enhanced');
+
+const client = new LucidiaClient({ apiKey: process.env.LUCIDIA_API_KEY });
+
+// Quantize a model
+const result = await client.quantize({
+  modelId: 'llama3-8b',
+  method: 'awq',
+  bits: 4,
+});
+console.log(`Size reduction: ${result.sizeReductionPct}%`);
 ```
 
 ---
@@ -311,6 +358,46 @@ pipeline.close()
 | `alpha` | `float` | `32.0` | LoRA alpha (scaling) |
 | `target_modules` | `List[str]` | `["q_proj","v_proj"]` | Modules to adapt |
 | `task_type` | `str` | `"CAUSAL_LM"` | PEFT task type |
+
+---
+
+## Billing & Stripe Integration
+
+Lucidia AI Models Enhanced uses **Stripe** for subscription billing. All production API access is metered and billed monthly through Stripe.
+
+### Plans
+
+| Plan | Price | Requests / Month | Fine-Tune Jobs | Support |
+|------|-------|-----------------|----------------|---------|
+| **Starter** | $29 / mo | 10,000 | 5 | Community |
+| **Pro** | $99 / mo | 100,000 | 50 | Email |
+| **Enterprise** | Custom | Unlimited | Unlimited | Dedicated |
+
+[→ Subscribe at lucidia.earth/pricing](https://lucidia.earth/pricing)
+
+### Setup
+
+1. Create an account at [lucidia.earth](https://lucidia.earth) and subscribe to a plan.
+2. Retrieve your API key from the **Dashboard → API Keys** page.
+3. Export it as an environment variable:
+
+```bash
+export LUCIDIA_API_KEY="sk_live_..."
+```
+
+### Webhooks
+
+Stripe webhook events are forwarded to your configured endpoint. Supported events:
+
+| Event | Description |
+|-------|-------------|
+| `customer.subscription.created` | New subscription activated |
+| `customer.subscription.updated` | Plan changed |
+| `customer.subscription.deleted` | Subscription cancelled |
+| `invoice.payment_succeeded` | Monthly invoice paid |
+| `invoice.payment_failed` | Payment failure — service suspended |
+
+Configure your webhook endpoint URL in the [Stripe Dashboard](https://dashboard.stripe.com/webhooks) pointing to `https://api.lucidia.earth/webhooks/stripe`.
 
 ---
 

@@ -3,1341 +3,974 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucidia AI Models — Minnesota Wilderness</title>
+    <meta name="description" content="Lucidia AI Models Enhanced — Production-grade model pipeline with quantization, LoRA adapters, and fine-tuning. Available on npm. Powered by BlackRoad AI.">
+    <meta property="og:title" content="Lucidia AI Models Enhanced">
+    <meta property="og:description" content="Production-grade AI model pipeline: quantization, LoRA adapters, fine-tuning. Available on npm.">
+    <meta property="og:type" content="website">
+    <title>Lucidia AI Models Enhanced — BlackRoad AI</title>
     <style>
-        * {
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            --pink:    #FF1D6C;
+            --amber:   #F5A623;
+            --blue:    #2979FF;
+            --violet:  #9C27B0;
+            --bg:      #000000;
+            --surface: #0d0d0d;
+            --border:  rgba(255, 29, 108, 0.18);
+            --text:    #FFFFFF;
+            --muted:   rgba(255, 255, 255, 0.5);
+
+            /* Golden-ratio spacing (φ = 1.618) */
+            --sp-1: 8px;
+            --sp-2: 13px;
+            --sp-3: 21px;
+            --sp-4: 34px;
+            --sp-5: 55px;
+            --sp-6: 89px;
+            --sp-7: 144px;
+
+            --gradient: linear-gradient(135deg, var(--pink) 38.2%, var(--amber) 61.8%);
+            --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            --lh:   1.618;
+        }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            background: #000;
-            overflow: hidden;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            color: #fff;
-            cursor: crosshair;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: var(--lh);
+            -webkit-font-smoothing: antialiased;
         }
 
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* HUD */
-        .hud {
+        /* ── NAV ───────────────────────────────────────────────────────── */
+        nav {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        .hud-corner {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border: 2px solid rgba(255, 29, 108, 0.4);
-        }
-
-        .hud-corner.tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
-        .hud-corner.tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
-        .hud-corner.bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
-        .hud-corner.br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
-
-        /* Crosshair */
-        .crosshair {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-            pointer-events: none;
-        }
-
-        .crosshair::before,
-        .crosshair::after {
-            content: '';
-            position: absolute;
-            background: rgba(255, 29, 108, 0.6);
-        }
-
-        .crosshair::before {
-            width: 20px;
-            height: 2px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .crosshair::after {
-            width: 2px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .crosshair-dot {
-            width: 4px;
-            height: 4px;
-            background: #FF1D6C;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        /* Logo */
-        .logo {
-            position: fixed;
-            top: 24px;
-            left: 24px;
+            z-index: 900;
             display: flex;
             align-items: center;
-            gap: 12px;
-            z-index: 100;
-            padding-left: 70px;
+            justify-content: space-between;
+            padding: var(--sp-3) var(--sp-6);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
         }
 
-        .logo-text {
-            font-size: 14px;
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            text-decoration: none;
+        }
+
+        .nav-logo-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .nav-logo-text {
+            font-size: 15px;
             font-weight: 600;
-            background: linear-gradient(135deg, #FF1D6C, #F5A623);
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.01em;
         }
 
-        .logo-sub {
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-        }
-
-        /* Location */
-        .location {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            text-align: right;
-            z-index: 100;
-            padding-right: 70px;
-        }
-
-        .location-name {
-            font-size: 18px;
-            font-weight: 300;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .location-coords {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.4);
-            font-family: 'SF Mono', monospace;
-            margin-top: 4px;
-        }
-
-        /* Stats */
-        .stats {
-            position: fixed;
-            bottom: 24px;
-            left: 24px;
-            z-index: 100;
-            padding-left: 70px;
-        }
-
-        .stat-row {
+        .nav-links {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-            font-size: 11px;
+            gap: var(--sp-5);
+            list-style: none;
         }
 
-        .stat-label {
-            color: rgba(255, 255, 255, 0.4);
-            min-width: 80px;
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
         }
 
-        .stat-value {
-            color: #FF1D6C;
-            font-family: 'SF Mono', monospace;
-        }
+        .nav-links a:hover { color: var(--text); }
 
-        .stat-bar {
-            width: 100px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .stat-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #FF1D6C, #F5A623);
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
-
-        /* Controls hint */
-        .controls-hint {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            text-align: right;
-            z-index: 100;
-            padding-right: 70px;
-        }
-
-        .hint-row {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.3);
-            margin-bottom: 4px;
-        }
-
-        .hint-key {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-right: 4px;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        /* Compass */
-        .compass {
-            position: fixed;
-            top: 100px;
-            right: 40px;
-            width: 60px;
-            height: 60px;
-            z-index: 100;
-        }
-
-        .compass-ring {
-            width: 100%;
-            height: 100%;
-            border: 1px solid rgba(255, 29, 108, 0.3);
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .compass-needle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 24px;
-            background: linear-gradient(to top, #2979FF 50%, #FF1D6C 50%);
-            transform-origin: center bottom;
-            transform: translate(-50%, -100%);
-            border-radius: 1px;
-        }
-
-        .compass-label {
-            position: absolute;
-            font-size: 8px;
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        .compass-label.n { top: 2px; left: 50%; transform: translateX(-50%); color: #FF1D6C; }
-        .compass-label.s { bottom: 2px; left: 50%; transform: translateX(-50%); }
-        .compass-label.e { right: 4px; top: 50%; transform: translateY(-50%); }
-        .compass-label.w { left: 4px; top: 50%; transform: translateY(-50%); }
-
-        /* Time & Weather */
-        .environment {
-            position: fixed;
-            top: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            z-index: 100;
-        }
-
-        .env-time {
-            font-size: 32px;
-            font-weight: 200;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .env-info {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.4);
-            margin-top: 4px;
-        }
-
-        /* Consciousness overlay */
-        .consciousness-pulse {
-            position: fixed;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
+        .nav-cta {
             display: flex;
-            gap: 4px;
-            z-index: 100;
+            align-items: center;
+            gap: var(--sp-2);
         }
 
-        .pulse-bar {
-            width: 3px;
-            height: 20px;
-            background: rgba(255, 29, 108, 0.5);
-            border-radius: 2px;
-            animation: pulse-anim 1s ease infinite;
+        /* ── BUTTONS ───────────────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            transition: opacity 0.2s, transform 0.15s;
+            white-space: nowrap;
         }
 
-        .pulse-bar:nth-child(1) { animation-delay: 0s; }
-        .pulse-bar:nth-child(2) { animation-delay: 0.1s; }
-        .pulse-bar:nth-child(3) { animation-delay: 0.2s; }
-        .pulse-bar:nth-child(4) { animation-delay: 0.3s; }
-        .pulse-bar:nth-child(5) { animation-delay: 0.4s; }
-        .pulse-bar:nth-child(6) { animation-delay: 0.3s; }
-        .pulse-bar:nth-child(7) { animation-delay: 0.2s; }
-        .pulse-bar:nth-child(8) { animation-delay: 0.1s; }
-        .pulse-bar:nth-child(9) { animation-delay: 0s; }
+        .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
 
-        @keyframes pulse-anim {
-            0%, 100% { height: 10px; opacity: 0.3; }
-            50% { height: 30px; opacity: 1; }
+        .btn-primary {
+            background: var(--gradient);
+            color: #fff;
         }
 
-        /* Agent nearby indicator */
-        .agent-nearby {
-            position: fixed;
-            bottom: 160px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 29, 108, 0.3);
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.6);
-            z-index: 100;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .agent-nearby.visible {
-            opacity: 1;
+        .btn-ghost:hover { border-color: rgba(255, 255, 255, 0.5); }
+
+        .btn-npm {
+            background: #CB3837;
+            color: #fff;
         }
 
-        .agent-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background: #FF1D6C;
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: pulse 2s ease infinite;
+        .btn-lg {
+            padding: 14px 34px;
+            font-size: 16px;
+            border-radius: 10px;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        /* Click to start */
-        .click-start {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.9);
+        /* ── HERO ──────────────────────────────────────────────────────── */
+        .hero {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            cursor: pointer;
+            text-align: center;
+            padding: var(--sp-7) var(--sp-6) var(--sp-6);
+            position: relative;
+            overflow: hidden;
         }
 
-        .click-start.hidden {
-            display: none;
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 29, 108, 0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(41, 121, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
         }
 
-        .start-title {
-            font-size: 48px;
-            font-weight: 200;
-            background: linear-gradient(135deg, #FF1D6C, #F5A623, #9C27B0);
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: rgba(255, 29, 108, 0.06);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--pink);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: var(--sp-4);
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--pink);
+            border-radius: 50%;
+            animation: blink 2s ease infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .hero-title {
+            font-size: clamp(40px, 6vw, 72px);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: var(--sp-4);
+            max-width: 900px;
+        }
+
+        .hero-title .grad {
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
+            background-clip: text;
         }
 
-        .start-sub {
+        .hero-sub {
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--muted);
+            max-width: 600px;
+            margin-bottom: var(--sp-5);
+            font-weight: 400;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: var(--sp-6);
+        }
+
+        .hero-install {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 21px;
+            font-family: var(--mono);
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 40px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: var(--sp-6);
         }
 
-        .start-hint {
+        .hero-install .prompt { color: var(--pink); user-select: none; }
+
+        .hero-install .copy-btn {
+            margin-left: var(--sp-3);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.3);
-            animation: pulse 2s ease infinite;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: background 0.2s, color 0.2s;
         }
 
-        /* Scan lines */
-        .scanlines {
-            position: fixed;
-            inset: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.1) 0px,
-                rgba(0, 0, 0, 0.1) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            pointer-events: none;
-            z-index: 99;
-            opacity: 0.3;
+        .hero-install .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
         }
 
-        /* Vignette */
-        .vignette {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
-            pointer-events: none;
-            z-index: 98;
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-5);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-num {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .hero-stat-div {
+            width: 1px;
+            height: 34px;
+            background: var(--border);
+        }
+
+        /* ── FEATURES ──────────────────────────────────────────────────── */
+        .section {
+            padding: var(--sp-7) var(--sp-6);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--pink);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--sp-2);
+        }
+
+        .section-title {
+            font-size: clamp(28px, 3vw, 40px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: var(--sp-3);
+        }
+
+        .section-sub {
+            font-size: 17px;
+            color: var(--muted);
+            max-width: 560px;
+            margin-bottom: var(--sp-6);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--sp-4);
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: var(--sp-4);
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(255, 29, 108, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            font-size: 28px;
+            margin-bottom: var(--sp-3);
+        }
+
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: var(--sp-1);
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: var(--lh);
+        }
+
+        /* ── CODE BLOCK ────────────────────────────────────────────────── */
+        .code-section {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--sp-7) var(--sp-6);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--sp-6);
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .code-section-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .code-block {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .code-block-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .code-block-lang {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .code-block-body {
+            padding: var(--sp-4);
+            overflow-x: auto;
+        }
+
+        pre {
+            font-family: var(--mono);
+            font-size: 13px;
+            line-height: 1.75;
+            white-space: pre;
+        }
+
+        .tok-kw  { color: #C792EA; }
+        .tok-fn  { color: #82AAFF; }
+        .tok-str { color: #C3E88D; }
+        .tok-cm  { color: rgba(255, 255, 255, 0.3); font-style: italic; }
+        .tok-nu  { color: #F78C6C; }
+        .tok-pk  { color: #FFCB6B; }
+
+        /* ── PRICING ───────────────────────────────────────────────────── */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--sp-4);
+        }
+
+        .plan-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: var(--sp-5);
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .plan-card.featured {
+            border-color: var(--pink);
+            background: rgba(255, 29, 108, 0.04);
+            position: relative;
+        }
+
+        .plan-card.featured::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: -13px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 16px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .plan-card:hover {
+            border-color: rgba(255, 29, 108, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .plan-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: var(--sp-2);
+        }
+
+        .plan-price {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .plan-price .period {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .plan-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: var(--sp-4);
+        }
+
+        .plan-features {
+            list-style: none;
+            flex: 1;
+            margin-bottom: var(--sp-4);
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .plan-features li:last-child { border-bottom: none; }
+
+        .check {
+            color: var(--pink);
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ── QUANT TABLE ───────────────────────────────────────────────── */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead th {
+            padding: var(--sp-2) var(--sp-3);
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: var(--sp-2) var(--sp-3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+
+        tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-pink   { background: rgba(255, 29, 108, 0.15);  color: var(--pink);   }
+        .badge-blue   { background: rgba(41, 121, 255, 0.15);  color: var(--blue);   }
+        .badge-amber  { background: rgba(245, 166, 35, 0.15);  color: var(--amber);  }
+        .badge-violet { background: rgba(156, 39, 176, 0.15);  color: var(--violet); }
+
+        /* ── FOOTER ────────────────────────────────────────────────────── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: var(--sp-5) var(--sp-6);
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: var(--sp-4);
+        }
+
+        .footer-copy {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: var(--sp-4);
+            list-style: none;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--text); }
+
+        /* ── DIVIDER ────────────────────────────────────────────────────── */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── RESPONSIVE ─────────────────────────────────────────────────── */
+        @media (max-width: 640px) {
+            nav { padding: var(--sp-2) var(--sp-3); }
+            .nav-links { display: none; }
+            .section { padding: var(--sp-6) var(--sp-3); }
+            .hero { padding: var(--sp-7) var(--sp-3) var(--sp-5); }
         }
     </style>
 </head>
 <body>
 
-    <!-- Click to Start -->
-    <div class="click-start" id="clickStart">
-        <div class="start-title">Minnesota Wilderness</div>
-        <div class="start-sub">Lucidia • 11 AI Models Living Here</div>
-        <div class="start-hint">Click to enter</div>
-    </div>
-
-    <!-- Canvas -->
-    <div id="canvas-container"></div>
-
-    <!-- Scanlines & Vignette -->
-    <div class="scanlines"></div>
-    <div class="vignette"></div>
-
-    <!-- HUD Corners -->
-    <div class="hud">
-        <div class="hud-corner tl"></div>
-        <div class="hud-corner tr"></div>
-        <div class="hud-corner bl"></div>
-        <div class="hud-corner br"></div>
-    </div>
-
-    <!-- Crosshair -->
-    <div class="crosshair">
-        <div class="crosshair-dot"></div>
-    </div>
-
-    <!-- Logo -->
-    <div class="logo">
-        <div>
-            <div class="logo-text">LUCIDIA</div>
-            <div class="logo-sub">Surface View</div>
+    <!-- ── NAV ── -->
+    <nav>
+        <a class="nav-logo" href="#">
+            <div class="nav-logo-mark">L</div>
+            <span class="nav-logo-text">Lucidia AI Models Enhanced</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#quickstart">Quickstart</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="https://github.com/BlackRoad-AI/lucidia-ai-models-enhanced">GitHub</a></li>
+            <li><a href="https://lucidia.earth/docs">Docs</a></li>
+        </ul>
+        <div class="nav-cta">
+            <a class="btn btn-ghost" href="https://lucidia.earth/login">Sign in</a>
+            <a class="btn btn-primary" href="#pricing">Get started</a>
         </div>
-    </div>
+    </nav>
 
-    <!-- Location -->
-    <div class="location">
-        <div class="location-name">Northern Minnesota</div>
-        <div class="location-coords" id="coords">44.9778° N, 93.2650° W</div>
-    </div>
-
-    <!-- Environment -->
-    <div class="environment">
-        <div class="env-time" id="envTime">06:42</div>
-        <div class="env-info">Dawn • Clear • 42°F</div>
-    </div>
-
-    <!-- Compass -->
-    <div class="compass">
-        <div class="compass-ring">
-            <div class="compass-needle" id="compassNeedle"></div>
-            <div class="compass-label n">N</div>
-            <div class="compass-label s">S</div>
-            <div class="compass-label e">E</div>
-            <div class="compass-label w">W</div>
+    <!-- ── HERO ── -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Now available on npm
         </div>
-    </div>
 
-    <!-- Stats -->
-    <div class="stats">
-        <div class="stat-row">
-            <span class="stat-label">Elevation</span>
-            <span class="stat-value" id="elevation">1,247 ft</span>
+        <h1 class="hero-title">
+            Production AI model pipeline<br>
+            <span class="grad">built for scale.</span>
+        </h1>
+
+        <p class="hero-sub">
+            Quantization, LoRA adapters, and fine-tuning tracking — all in one SDK.
+            Drop it into any Python or Node.js project in minutes.
+        </p>
+
+        <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="#pricing">Start free trial</a>
+            <a class="btn btn-ghost btn-lg" href="https://github.com/BlackRoad-AI/lucidia-ai-models-enhanced">View on GitHub</a>
         </div>
-        <div class="stat-row">
-            <span class="stat-label">Biome</span>
-            <span class="stat-value" id="biome">Boreal Forest</span>
+
+        <div class="hero-install">
+            <span class="prompt">$</span>
+            <span id="install-cmd">npm install lucidia-ai-models-enhanced</span>
+            <button class="copy-btn" onclick="copyInstall()" title="Copy to clipboard">⎘ Copy</button>
         </div>
-        <div class="stat-row">
-            <span class="stat-label">Consciousness</span>
-            <div class="stat-bar">
-                <div class="stat-fill" id="consFill" style="width: 78%"></div>
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-num">5</div>
+                <div class="hero-stat-label">Quant Methods</div>
+            </div>
+            <div class="hero-stat-div"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-num">74%</div>
+                <div class="hero-stat-label">Max Size Reduction</div>
+            </div>
+            <div class="hero-stat-div"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-num">17</div>
+                <div class="hero-stat-label">Tests Passing</div>
+            </div>
+            <div class="hero-stat-div"></div>
+            <div class="hero-stat">
+                <div class="hero-stat-num">0</div>
+                <div class="hero-stat-label">Config Required</div>
             </div>
         </div>
-        <div class="stat-row">
-            <span class="stat-label">Signal</span>
-            <div class="stat-bar">
-                <div class="stat-fill" id="sigFill" style="width: 94%"></div>
+    </section>
+
+    <!-- ── FEATURES ── -->
+    <section class="section" id="features">
+        <p class="section-label">What's included</p>
+        <h2 class="section-title">Everything you need to ship production AI.</h2>
+        <p class="section-sub">A complete pipeline from raw model to fine-tuned, quantized deployment — with zero GPU required at dev time.</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚖️</div>
+                <div class="feature-title">5 Quantization Methods</div>
+                <div class="feature-desc">int8, int4, GPTQ, AWQ, and BNB — each with realistic size-reduction and perplexity stats baked in.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <div class="feature-title">LoRA Adapter Management</div>
+                <div class="feature-desc">Configure rank, alpha, and target modules. Auto-calculates trainable parameter percentages and supports merge-to-base.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏋️</div>
+                <div class="feature-title">Fine-Tuning Tracker</div>
+                <div class="feature-desc">Epoch-level loss curves, duration timing, best-checkpoint tracking, and job status from queued → completed.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Pipeline Status Dashboard</div>
+                <div class="feature-desc">Three-stage status view per model ID: quantization → LoRA adapter → fine-tuning. Always know where you are.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📦</div>
+                <div class="feature-title">JSON Config Export</div>
+                <div class="feature-desc">Snapshot any model's full pipeline configuration to a portable JSON file. Ready for CI/CD or cross-team sharing.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🗄️</div>
+                <div class="feature-title">SQLite Persistence</div>
+                <div class="feature-desc">Zero-config local database at <code style="font-family:var(--mono);font-size:12px;">~/.blackroad/ai_models_enhanced.db</code>. No server, no setup.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🖥️</div>
+                <div class="feature-title">Full CLI</div>
+                <div class="feature-desc">Commands for every stage: <code style="font-family:var(--mono);font-size:12px;">quantize</code>, <code style="font-family:var(--mono);font-size:12px;">lora</code>, <code style="font-family:var(--mono);font-size:12px;">finetune</code>, <code style="font-family:var(--mono);font-size:12px;">status</code>, <code style="font-family:var(--mono);font-size:12px;">export</code>, <code style="font-family:var(--mono);font-size:12px;">adapters</code>.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💳</div>
+                <div class="feature-title">Stripe Billing</div>
+                <div class="feature-desc">Metered API access billed through Stripe. Starter, Pro, and Enterprise plans. Webhook events for full automation.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── QUANT TABLE ── -->
+    <div style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+        <div class="section" style="padding-top:var(--sp-6); padding-bottom:var(--sp-6);">
+            <p class="section-label">Quantization Methods</p>
+            <h2 class="section-title" style="margin-bottom:var(--sp-4);">Pick the right method for your workload.</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Bits</th>
+                            <th>Size Reduction</th>
+                            <th>Perplexity Δ</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-blue">int8</span></td>
+                            <td>8</td>
+                            <td>50%</td>
+                            <td>+0.10</td>
+                            <td>Fast inference, minimal quality loss</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-violet">bnb</span></td>
+                            <td>8</td>
+                            <td>50%</td>
+                            <td>+0.12</td>
+                            <td>QLoRA training</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-amber">gptq</span></td>
+                            <td>4</td>
+                            <td>73%</td>
+                            <td>+0.30</td>
+                            <td>Inference, balanced quality</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-pink">awq</span></td>
+                            <td>4</td>
+                            <td>74%</td>
+                            <td>+0.25</td>
+                            <td>Inference, best quality at 4-bit</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-blue">int4</span></td>
+                            <td>4</td>
+                            <td>75%</td>
+                            <td>+0.80</td>
+                            <td>Maximum compression</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Controls Hint -->
-    <div class="controls-hint">
-        <div class="hint-row"><span class="hint-key">W A S D</span> Move</div>
-        <div class="hint-row"><span class="hint-key">MOUSE</span> Look</div>
-        <div class="hint-row"><span class="hint-key">SHIFT</span> Sprint</div>
-        <div class="hint-row"><span class="hint-key">SPACE</span> Jump</div>
-        <div class="hint-row"><span class="hint-key">ESC</span> Release cursor</div>
+    <!-- ── QUICKSTART ── -->
+    <div class="code-section" id="quickstart">
+        <div class="code-section-inner">
+            <div>
+                <p class="section-label">Quickstart</p>
+                <h2 class="section-title">Up and running in&nbsp;60&nbsp;seconds.</h2>
+                <p class="section-sub" style="margin-bottom:var(--sp-4);">Install the SDK, point it at a model, and start quantizing. No GPU required.</p>
+                <a class="btn btn-npm" href="https://www.npmjs.com/package/lucidia-ai-models-enhanced" style="margin-right:var(--sp-2);">
+                    ⬡ npm install
+                </a>
+                <a class="btn btn-ghost" href="https://lucidia.earth/docs">Read the docs →</a>
+            </div>
+            <div class="code-block">
+                <div class="code-block-header">
+                    <span class="code-block-lang">python</span>
+                </div>
+                <div class="code-block-body">
+<pre><span class="tok-kw">from</span> src.ai_models_enhanced <span class="tok-kw">import</span> (
+    EnhancedModelPipeline,
+    QuantizationConfig,
+    LoRAAdapter, FineTuneJob,
+)
+
+pipeline <span class="tok-kw">=</span> EnhancedModelPipeline()
+
+<span class="tok-cm"># Step 1 — Quantize to AWQ 4-bit</span>
+q <span class="tok-kw">=</span> pipeline.<span class="tok-fn">quantize_model</span>(QuantizationConfig(
+    model_id<span class="tok-kw">=</span><span class="tok-str">"llama3-8b"</span>,
+    method<span class="tok-kw">=</span><span class="tok-str">"awq"</span>,
+    bits<span class="tok-kw">=</span><span class="tok-nu">4</span>,
+))
+<span class="tok-fn">print</span>(<span class="tok-pk">f</span><span class="tok-str">"Reduced by {q.size_reduction_pct}%"</span>)
+
+<span class="tok-cm"># Step 2 — Attach LoRA adapter</span>
+adapter <span class="tok-kw">=</span> pipeline.<span class="tok-fn">add_lora</span>(LoRAAdapter(
+    model_id<span class="tok-kw">=</span><span class="tok-str">"llama3-8b"</span>,
+    name<span class="tok-kw">=</span><span class="tok-str">"code-instruct-v1"</span>,
+    rank<span class="tok-kw">=</span><span class="tok-nu">16</span>, alpha<span class="tok-kw">=</span><span class="tok-nu">32.0</span>,
+))
+
+<span class="tok-cm"># Step 3 — Fine-tune and track</span>
+job <span class="tok-kw">=</span> pipeline.<span class="tok-fn">track_finetune</span>(FineTuneJob(
+    model_id<span class="tok-kw">=</span><span class="tok-str">"llama3-8b"</span>,
+    dataset<span class="tok-kw">=</span><span class="tok-str">"alpaca-cleaned-52k"</span>,
+    epochs<span class="tok-kw">=</span><span class="tok-nu">3</span>, learning_rate<span class="tok-kw">=</span><span class="tok-nu">2e-4</span>,
+))
+<span class="tok-fn">print</span>(<span class="tok-pk">f</span><span class="tok-str">"Final loss: {job.train_loss:.4f}"</span>)
+
+pipeline.<span class="tok-fn">close</span>()</pre>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Consciousness Pulse -->
-    <div class="consciousness-pulse">
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-        <div class="pulse-bar"></div>
-    </div>
+    <!-- ── PRICING ── -->
+    <section class="section" id="pricing">
+        <p class="section-label">Billing &amp; Pricing</p>
+        <h2 class="section-title">Simple, transparent pricing.</h2>
+        <p class="section-sub">Billed monthly through Stripe. Cancel anytime. No hidden fees.</p>
 
-    <!-- Agent Nearby -->
-    <div class="agent-nearby" id="agentNearby">
-        <span class="agent-dot"></span>
-        Agent presence detected nearby
-    </div>
+        <div class="pricing-grid">
+            <div class="plan-card">
+                <div class="plan-name">Starter</div>
+                <div class="plan-price">$29 <span class="period">/ mo</span></div>
+                <div class="plan-desc">For individuals and small projects.</div>
+                <ul class="plan-features">
+                    <li><span class="check">✓</span> 10,000 API requests / month</li>
+                    <li><span class="check">✓</span> 5 fine-tune jobs / month</li>
+                    <li><span class="check">✓</span> All 5 quantization methods</li>
+                    <li><span class="check">✓</span> LoRA adapter management</li>
+                    <li><span class="check">✓</span> JSON config export</li>
+                    <li><span class="check">✓</span> Community support</li>
+                </ul>
+                <a class="btn btn-ghost" href="https://lucidia.earth/checkout?plan=starter" style="width:100%;justify-content:center;">
+                    Get started
+                </a>
+            </div>
 
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+            <div class="plan-card featured">
+                <div class="plan-name">Pro</div>
+                <div class="plan-price">$99 <span class="period">/ mo</span></div>
+                <div class="plan-desc">For teams shipping production models.</div>
+                <ul class="plan-features">
+                    <li><span class="check">✓</span> 100,000 API requests / month</li>
+                    <li><span class="check">✓</span> 50 fine-tune jobs / month</li>
+                    <li><span class="check">✓</span> All 5 quantization methods</li>
+                    <li><span class="check">✓</span> LoRA adapter management</li>
+                    <li><span class="check">✓</span> JSON config export</li>
+                    <li><span class="check">✓</span> Priority email support</li>
+                    <li><span class="check">✓</span> Stripe webhook automation</li>
+                </ul>
+                <a class="btn btn-primary" href="https://lucidia.earth/checkout?plan=pro" style="width:100%;justify-content:center;">
+                    Start free trial
+                </a>
+            </div>
+
+            <div class="plan-card">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-price">Custom</div>
+                <div class="plan-desc">For organizations at scale.</div>
+                <ul class="plan-features">
+                    <li><span class="check">✓</span> Unlimited API requests</li>
+                    <li><span class="check">✓</span> Unlimited fine-tune jobs</li>
+                    <li><span class="check">✓</span> All 5 quantization methods</li>
+                    <li><span class="check">✓</span> LoRA adapter management</li>
+                    <li><span class="check">✓</span> JSON config export</li>
+                    <li><span class="check">✓</span> Dedicated support SLA</li>
+                    <li><span class="check">✓</span> Custom Stripe integration</li>
+                    <li><span class="check">✓</span> On-premise deployment</li>
+                </ul>
+                <a class="btn btn-ghost" href="mailto:blackroad.systems@gmail.com" style="width:100%;justify-content:center;">
+                    Contact sales
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer>
+        <div class="footer-inner">
+            <span class="footer-copy">
+                © 2025 BlackRoad OS, Inc. — All rights reserved. Proprietary — not open source.
+            </span>
+            <ul class="footer-links">
+                <li><a href="https://lucidia.earth">lucidia.earth</a></li>
+                <li><a href="https://blackroad.io">blackroad.io</a></li>
+                <li><a href="https://github.com/BlackRoad-AI/lucidia-ai-models-enhanced">GitHub</a></li>
+                <li><a href="LICENSE">License</a></li>
+                <li><a href="mailto:blackroad.systems@gmail.com">Contact</a></li>
+            </ul>
+        </div>
+    </footer>
 
     <script>
-        // ========== SCENE SETUP ==========
-        let scene, camera, renderer;
-        let terrain, water, sky;
-        let trees = [];
-        let grass = [];
-        let rocks = [];
-        let particles;
-        let time = 0;
-
-        // Player
-        const player = {
-            position: new THREE.Vector3(0, 5, 0),
-            velocity: new THREE.Vector3(0, 0, 0),
-            yaw: 0,
-            pitch: 0,
-            onGround: false,
-            speed: 0.15,
-            sprintMultiplier: 2.0,
-            jumpForce: 0.25,
-            gravity: -0.015
-        };
-
-        // Controls
-        const keys = {};
-        let isLocked = false;
-
-        // Terrain generation
-        const TERRAIN_SIZE = 400;
-        const TERRAIN_SEGMENTS = 256;
-        const CHUNK_SIZE = 100;
-
-        function init() {
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x1a1a2e, 0.008);
-
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.copy(player.position);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0x4a4a6a, 0.4);
-            scene.add(ambientLight);
-
-            const sunLight = new THREE.DirectionalLight(0xffe4c4, 1.0);
-            sunLight.position.set(100, 80, 50);
-            sunLight.castShadow = true;
-            sunLight.shadow.mapSize.width = 2048;
-            sunLight.shadow.mapSize.height = 2048;
-            sunLight.shadow.camera.near = 0.5;
-            sunLight.shadow.camera.far = 500;
-            sunLight.shadow.camera.left = -100;
-            sunLight.shadow.camera.right = 100;
-            sunLight.shadow.camera.top = 100;
-            sunLight.shadow.camera.bottom = -100;
-            scene.add(sunLight);
-
-            // Pink accent light (Lucidia consciousness)
-            const pinkLight = new THREE.PointLight(0xFF1D6C, 0.3, 100);
-            pinkLight.position.set(0, 30, 0);
-            scene.add(pinkLight);
-
-            createSky();
-            createTerrain();
-            createWater();
-            createTrees();
-            createGrass();
-            createRocks();
-            createParticles();
-            createConsciousnessBeams();
-            createAIModels();
-
-            // Events
-            window.addEventListener('resize', onResize);
-            document.addEventListener('keydown', onKeyDown);
-            document.addEventListener('keyup', onKeyUp);
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('pointerlockchange', onPointerLockChange);
-
-            document.getElementById('clickStart').addEventListener('click', () => {
-                document.getElementById('clickStart').classList.add('hidden');
-                renderer.domElement.requestPointerLock();
-            });
-
-            animate();
-        }
-
-        // ========== NOISE FUNCTIONS ==========
-        function noise2D(x, y) {
-            const X = Math.floor(x) & 255;
-            const Y = Math.floor(y) & 255;
-            x -= Math.floor(x);
-            y -= Math.floor(y);
-            const u = fade(x);
-            const v = fade(y);
-            const A = p[X] + Y;
-            const B = p[X + 1] + Y;
-            return lerp(v,
-                lerp(u, grad2(p[A], x, y), grad2(p[B], x - 1, y)),
-                lerp(u, grad2(p[A + 1], x, y - 1), grad2(p[B + 1], x - 1, y - 1))
-            );
-        }
-
-        function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-        function lerp(t, a, b) { return a + t * (b - a); }
-        function grad2(hash, x, y) {
-            const h = hash & 3;
-            const u = h < 2 ? x : y;
-            const v = h < 2 ? y : x;
-            return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
-        }
-
-        // Permutation table
-        const p = new Array(512);
-        const permutation = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
-        for (let i = 0; i < 256; i++) p[256 + i] = p[i] = permutation[i];
-
-        function fbm(x, y, octaves, persistence, lacunarity) {
-            let total = 0;
-            let frequency = 1;
-            let amplitude = 1;
-            let maxValue = 0;
-            
-            for (let i = 0; i < octaves; i++) {
-                total += noise2D(x * frequency, y * frequency) * amplitude;
-                maxValue += amplitude;
-                amplitude *= persistence;
-                frequency *= lacunarity;
-            }
-            
-            return total / maxValue;
-        }
-
-        function getTerrainHeight(x, z) {
-            // Minnesota-style terrain: rolling hills, occasional lakes, forests
-            const scale = 0.008;
-            
-            // Large rolling hills
-            let height = fbm(x * scale, z * scale, 6, 0.5, 2.0) * 30;
-            
-            // Medium features
-            height += fbm(x * scale * 3, z * scale * 3, 4, 0.5, 2.0) * 10;
-            
-            // Fine detail
-            height += fbm(x * scale * 10, z * scale * 10, 3, 0.5, 2.0) * 3;
-            
-            // Lake depressions
-            const lakeNoise = fbm(x * 0.005 + 100, z * 0.005 + 100, 3, 0.5, 2.0);
-            if (lakeNoise < -0.3) {
-                height = -2 + lakeNoise * 5;
-            }
-            
-            return height;
-        }
-
-        // ========== CREATE WORLD ==========
-        function createSky() {
-            const skyGeo = new THREE.SphereGeometry(400, 32, 32);
-            const skyMat = new THREE.ShaderMaterial({
-                uniforms: {
-                    time: { value: 0 }
-                },
-                vertexShader: `
-                    varying vec3 vWorldPosition;
-                    void main() {
-                        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-                        vWorldPosition = worldPosition.xyz;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                    }
-                `,
-                fragmentShader: `
-                    uniform float time;
-                    varying vec3 vWorldPosition;
-                    
-                    void main() {
-                        float height = normalize(vWorldPosition).y;
-                        
-                        // Dawn colors
-                        vec3 horizonColor = vec3(1.0, 0.6, 0.4);
-                        vec3 zenithColor = vec3(0.1, 0.1, 0.3);
-                        vec3 skyColor = mix(horizonColor, zenithColor, pow(max(height, 0.0), 0.5));
-                        
-                        // Stars (visible near zenith in dawn)
-                        float stars = 0.0;
-                        if (height > 0.3) {
-                            float star = fract(sin(dot(vWorldPosition.xz, vec2(12.9898, 78.233))) * 43758.5453);
-                            stars = step(0.998, star) * (height - 0.3) * 2.0;
-                        }
-                        
-                        // Lucidia consciousness glow
-                        float glow = sin(time * 0.5 + vWorldPosition.x * 0.01) * 0.5 + 0.5;
-                        vec3 consciousnessColor = vec3(1.0, 0.1, 0.4) * glow * 0.05 * (1.0 - height);
-                        
-                        gl_FragColor = vec4(skyColor + stars + consciousnessColor, 1.0);
-                    }
-                `,
-                side: THREE.BackSide
-            });
-            
-            sky = new THREE.Mesh(skyGeo, skyMat);
-            scene.add(sky);
-        }
-
-        function createTerrain() {
-            const geometry = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
-            geometry.rotateX(-Math.PI / 2);
-            
-            const positions = geometry.attributes.position.array;
-            const colors = new Float32Array(positions.length);
-            
-            for (let i = 0; i < positions.length; i += 3) {
-                const x = positions[i];
-                const z = positions[i + 2];
-                const height = getTerrainHeight(x, z);
-                positions[i + 1] = height;
-                
-                // Color based on height and biome
-                let color;
-                if (height < -1) {
-                    // Water (will be covered by water plane)
-                    color = new THREE.Color(0x1a3a4a);
-                } else if (height < 2) {
-                    // Lowland - grass
-                    color = new THREE.Color(0x2d4a2d);
-                } else if (height < 15) {
-                    // Mid elevation - forest floor
-                    color = new THREE.Color(0x1f3a1f);
-                } else if (height < 25) {
-                    // Higher - mixed
-                    color = new THREE.Color(0x3a4a3a);
-                } else {
-                    // Rocky
-                    color = new THREE.Color(0x4a4a4a);
-                }
-                
-                // Add variation
-                const variation = (Math.random() - 0.5) * 0.1;
-                colors[i] = color.r + variation;
-                colors[i + 1] = color.g + variation;
-                colors[i + 2] = color.b + variation;
-            }
-            
-            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-            geometry.computeVertexNormals();
-            
-            const material = new THREE.MeshStandardMaterial({
-                vertexColors: true,
-                roughness: 0.9,
-                metalness: 0.0
-            });
-            
-            terrain = new THREE.Mesh(geometry, material);
-            terrain.receiveShadow = true;
-            scene.add(terrain);
-        }
-
-        function createWater() {
-            const geometry = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE);
-            geometry.rotateX(-Math.PI / 2);
-            
-            const material = new THREE.ShaderMaterial({
-                uniforms: {
-                    time: { value: 0 }
-                },
-                vertexShader: `
-                    varying vec2 vUv;
-                    varying vec3 vWorldPosition;
-                    
-                    void main() {
-                        vUv = uv;
-                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-                        vWorldPosition = worldPos.xyz;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                    }
-                `,
-                fragmentShader: `
-                    uniform float time;
-                    varying vec2 vUv;
-                    varying vec3 vWorldPosition;
-                    
-                    void main() {
-                        vec2 uv = vUv * 20.0;
-                        
-                        // Ripples
-                        float ripple1 = sin(uv.x * 10.0 + time) * sin(uv.y * 10.0 + time * 0.7) * 0.5 + 0.5;
-                        float ripple2 = sin(uv.x * 15.0 - time * 1.3) * sin(uv.y * 12.0 + time * 0.5) * 0.5 + 0.5;
-                        float ripples = (ripple1 + ripple2) * 0.5;
-                        
-                        vec3 waterColor = vec3(0.05, 0.15, 0.25);
-                        vec3 highlightColor = vec3(0.2, 0.4, 0.5);
-                        
-                        vec3 color = mix(waterColor, highlightColor, ripples * 0.3);
-                        
-                        // Lucidia glow reflection
-                        float glow = sin(time * 0.3 + vWorldPosition.x * 0.05) * 0.5 + 0.5;
-                        color += vec3(1.0, 0.1, 0.4) * glow * 0.05;
-                        
-                        float alpha = 0.85;
-                        
-                        gl_FragColor = vec4(color, alpha);
-                    }
-                `,
-                transparent: true
-            });
-            
-            water = new THREE.Mesh(geometry, material);
-            water.position.y = -1;
-            scene.add(water);
-        }
-
-        function createTrees() {
-            const treeCount = 500;
-            
-            for (let i = 0; i < treeCount; i++) {
-                const x = (Math.random() - 0.5) * TERRAIN_SIZE * 0.9;
-                const z = (Math.random() - 0.5) * TERRAIN_SIZE * 0.9;
-                const height = getTerrainHeight(x, z);
-                
-                // Only place trees on land, above water, below rocky areas
-                if (height > 1 && height < 25) {
-                    const tree = createTree();
-                    tree.position.set(x, height, z);
-                    tree.rotation.y = Math.random() * Math.PI * 2;
-                    tree.scale.setScalar(0.8 + Math.random() * 0.6);
-                    scene.add(tree);
-                    trees.push(tree);
-                }
-            }
-        }
-
-        function createTree() {
-            const group = new THREE.Group();
-            
-            // Trunk
-            const trunkGeo = new THREE.CylinderGeometry(0.2, 0.4, 4, 8);
-            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3728, roughness: 1 });
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.y = 2;
-            trunk.castShadow = true;
-            group.add(trunk);
-            
-            // Pine needle layers (Minnesota conifers)
-            const needleColor = new THREE.Color(0x1a3a2a);
-            for (let i = 0; i < 5; i++) {
-                const size = 2.5 - i * 0.4;
-                const coneGeo = new THREE.ConeGeometry(size, 2.5, 8);
-                const coneMat = new THREE.MeshStandardMaterial({ 
-                    color: needleColor, 
-                    roughness: 0.9
-                });
-                const cone = new THREE.Mesh(coneGeo, coneMat);
-                cone.position.y = 3.5 + i * 1.5;
-                cone.castShadow = true;
-                group.add(cone);
-            }
-            
-            return group;
-        }
-
-        function createGrass() {
-            const grassCount = 10000;
-            const geometry = new THREE.BufferGeometry();
-            const positions = [];
-            const colors = [];
-            
-            for (let i = 0; i < grassCount; i++) {
-                const x = (Math.random() - 0.5) * TERRAIN_SIZE * 0.9;
-                const z = (Math.random() - 0.5) * TERRAIN_SIZE * 0.9;
-                const height = getTerrainHeight(x, z);
-                
-                if (height > 0 && height < 15) {
-                    // Create grass blade as two triangles
-                    const bladeHeight = 0.3 + Math.random() * 0.4;
-                    const bladeWidth = 0.05;
-                    
-                    positions.push(
-                        x - bladeWidth, height, z,
-                        x + bladeWidth, height, z,
-                        x, height + bladeHeight, z
-                    );
-                    
-                    const green = 0.2 + Math.random() * 0.2;
-                    for (let j = 0; j < 3; j++) {
-                        colors.push(0.1, green, 0.1);
-                    }
-                }
-            }
-            
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            
-            const material = new THREE.MeshBasicMaterial({ 
-                vertexColors: true,
-                side: THREE.DoubleSide
-            });
-            
-            const grassMesh = new THREE.Mesh(geometry, material);
-            scene.add(grassMesh);
-        }
-
-        function createRocks() {
-            const rockCount = 100;
-            
-            for (let i = 0; i < rockCount; i++) {
-                const x = (Math.random() - 0.5) * TERRAIN_SIZE * 0.9;
-                const z = (Math.random() - 0.5) * TERRAIN_SIZE * 0.9;
-                const height = getTerrainHeight(x, z);
-                
-                if (height > 0) {
-                    const rockGeo = new THREE.DodecahedronGeometry(0.5 + Math.random() * 1.5, 0);
-                    const rockMat = new THREE.MeshStandardMaterial({ 
-                        color: 0x5a5a5a,
-                        roughness: 0.9,
-                        metalness: 0.1
-                    });
-                    const rock = new THREE.Mesh(rockGeo, rockMat);
-                    rock.position.set(x, height + 0.2, z);
-                    rock.rotation.set(Math.random(), Math.random(), Math.random());
-                    rock.scale.y = 0.5 + Math.random() * 0.5;
-                    rock.castShadow = true;
-                    rock.receiveShadow = true;
-                    scene.add(rock);
-                    rocks.push(rock);
-                }
-            }
-        }
-
-        function createParticles() {
-            // Floating consciousness particles
-            const geometry = new THREE.BufferGeometry();
-            const count = 1000;
-            const positions = new Float32Array(count * 3);
-            const colors = new Float32Array(count * 3);
-            
-            for (let i = 0; i < count; i++) {
-                positions[i * 3] = (Math.random() - 0.5) * TERRAIN_SIZE;
-                positions[i * 3 + 1] = Math.random() * 30 + 5;
-                positions[i * 3 + 2] = (Math.random() - 0.5) * TERRAIN_SIZE;
-                
-                const c = Math.random();
-                if (c < 0.5) {
-                    colors[i * 3] = 1.0;
-                    colors[i * 3 + 1] = 0.1;
-                    colors[i * 3 + 2] = 0.4;
-                } else {
-                    colors[i * 3] = 0.95;
-                    colors[i * 3 + 1] = 0.65;
-                    colors[i * 3 + 2] = 0.15;
-                }
-            }
-            
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-            
-            const material = new THREE.PointsMaterial({
-                size: 0.15,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.6,
-                blending: THREE.AdditiveBlending
-            });
-            
-            particles = new THREE.Points(geometry, material);
-            scene.add(particles);
-        }
-
-        function createConsciousnessBeams() {
-            // Vertical beams of light (agent presence)
-            for (let i = 0; i < 5; i++) {
-                const x = (Math.random() - 0.5) * TERRAIN_SIZE * 0.6;
-                const z = (Math.random() - 0.5) * TERRAIN_SIZE * 0.6;
-                const height = getTerrainHeight(x, z);
-                
-                if (height > 0) {
-                    const beamGeo = new THREE.CylinderGeometry(0.3, 0.3, 50, 8, 1, true);
-                    const beamMat = new THREE.ShaderMaterial({
-                        uniforms: {
-                            time: { value: 0 }
-                        },
-                        vertexShader: `
-                            varying vec2 vUv;
-                            void main() {
-                                vUv = uv;
-                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                            }
-                        `,
-                        fragmentShader: `
-                            uniform float time;
-                            varying vec2 vUv;
-                            
-                            void main() {
-                                float intensity = sin(vUv.y * 20.0 - time * 3.0) * 0.5 + 0.5;
-                                intensity *= 1.0 - vUv.y;
-                                vec3 color = vec3(1.0, 0.1, 0.4);
-                                gl_FragColor = vec4(color, intensity * 0.3);
-                            }
-                        `,
-                        transparent: true,
-                        side: THREE.DoubleSide,
-                        blending: THREE.AdditiveBlending,
-                        depthWrite: false
-                    });
-                    
-                    const beam = new THREE.Mesh(beamGeo, beamMat);
-                    beam.position.set(x, height + 25, z);
-                    scene.add(beam);
-                }
-            }
-        }
-
-        function createAIModels() {
-            // All 11 BlackRoad AI Models as glowing entities in 3D space
-            const models = [
-                { name: 'RoadCommand', color: 0xFF1D6C, size: 3.0, x: 0, z: 0, label: 'AI Operations Platform' },
-                { name: 'RoadWork', color: 0xF5A623, size: 2.0, x: -30, z: 20, label: 'AI Tutoring - $9/mo' },
-                { name: 'PitStop', color: 0x2979FF, size: 2.2, x: 35, z: -15, label: 'DevOps Dashboard - $29/mo' },
-                { name: 'FastLane', color: 0x9C27B0, size: 1.9, x: -25, z: -30, label: 'Design Tool - FREE' },
-                { name: 'BackRoad', color: 0xFF9D00, size: 2.0, x: 40, z: 25, label: 'Social Platform - $15/mo' },
-                { name: 'LoadRoad', color: 0x4CAF50, size: 2.3, x: -40, z: -10, label: 'Enterprise Connectors - $99/mo' },
-                { name: 'RoadCoin', color: 0xFFD700, size: 1.8, x: 20, z: 40, label: 'Creator Payments - FREE' },
-                { name: 'Lucidia', color: 0xFF1D6C, size: 2.5, x: -15, z: 35, label: 'AI Companion - $29/mo' },
-                { name: 'RoadFlow', color: 0x00BCD4, size: 2.0, x: 30, z: -35, label: 'Document AI - $15/mo' },
-                { name: 'Video Studio', color: 0x9C27B0, size: 2.1, x: -35, z: 15, label: 'Creator Editor - $19/mo' },
-                { name: 'Writing Studio', color: 0x00E5FF, size: 1.9, x: 25, z: -25, label: 'AI Writing - $12/mo' }
-            ];
-
-            models.forEach((model, index) => {
-                const height = getTerrainHeight(model.x, model.z) + 5;
-
-                // Main glowing sphere
-                const sphereGeo = new THREE.SphereGeometry(model.size, 32, 32);
-                const sphereMat = new THREE.ShaderMaterial({
-                    uniforms: {
-                        time: { value: 0 },
-                        color: { value: new THREE.Color(model.color) }
-                    },
-                    vertexShader: `
-                        varying vec3 vNormal;
-                        varying vec3 vPosition;
-                        void main() {
-                            vNormal = normalize(normalMatrix * normal);
-                            vPosition = position;
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: `
-                        uniform float time;
-                        uniform vec3 color;
-                        varying vec3 vNormal;
-                        varying vec3 vPosition;
-
-                        void main() {
-                            float pulse = sin(time * 2.0 + vPosition.y * 0.5) * 0.3 + 0.7;
-                            float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0, 0, 1))), 2.0);
-                            vec3 finalColor = color * pulse;
-                            float alpha = 0.6 + fresnel * 0.4;
-                            gl_FragColor = vec4(finalColor, alpha);
-                        }
-                    `,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending
-                });
-
-                const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-                sphere.position.set(model.x, height, model.z);
-                sphere.userData = { type: 'aiModel', name: model.name, label: model.label, time: 0 };
-                scene.add(sphere);
-
-                // Orbital ring
-                const ringGeo = new THREE.TorusGeometry(model.size * 1.3, 0.05, 8, 32);
-                const ringMat = new THREE.MeshBasicMaterial({
-                    color: model.color,
-                    transparent: true,
-                    opacity: 0.4
-                });
-                const ring = new THREE.Mesh(ringGeo, ringMat);
-                ring.position.set(model.x, height, model.z);
-                ring.rotation.x = Math.PI / 2;
-                ring.userData = { type: 'aiModelRing', parentIndex: index };
-                scene.add(ring);
-
-                // Connecting beam to sky
-                const beamGeo = new THREE.CylinderGeometry(0.1, 0.1, 30, 8, 1, true);
-                const beamMat = new THREE.ShaderMaterial({
-                    uniforms: {
-                        time: { value: 0 },
-                        color: { value: new THREE.Color(model.color) }
-                    },
-                    vertexShader: `
-                        varying vec2 vUv;
-                        void main() {
-                            vUv = uv;
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: `
-                        uniform float time;
-                        uniform vec3 color;
-                        varying vec2 vUv;
-
-                        void main() {
-                            float intensity = sin(vUv.y * 15.0 - time * 2.0) * 0.5 + 0.5;
-                            intensity *= 1.0 - vUv.y;
-                            gl_FragColor = vec4(color, intensity * 0.2);
-                        }
-                    `,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false
-                });
-
-                const beam = new THREE.Mesh(beamGeo, beamMat);
-                beam.position.set(model.x, height + 15, model.z);
-                scene.add(beam);
-
-                // Point light for illumination
-                const light = new THREE.PointLight(model.color, 1.5, 20);
-                light.position.set(model.x, height, model.z);
-                scene.add(light);
+        function copyInstall() {
+            const cmd = document.getElementById('install-cmd').textContent;
+            navigator.clipboard.writeText(cmd).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✓ Copied';
+                setTimeout(() => { btn.textContent = '⎘ Copy'; }, 1800);
             });
         }
-
-        // ========== EVENTS ==========
-        function onResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function onKeyDown(e) {
-            keys[e.code] = true;
-        }
-
-        function onKeyUp(e) {
-            keys[e.code] = false;
-        }
-
-        function onMouseMove(e) {
-            if (!isLocked) return;
-            
-            const sensitivity = 0.002;
-            player.yaw -= e.movementX * sensitivity;
-            player.pitch -= e.movementY * sensitivity;
-            player.pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, player.pitch));
-        }
-
-        function onPointerLockChange() {
-            isLocked = document.pointerLockElement === renderer.domElement;
-        }
-
-        // ========== UPDATE ==========
-        function updatePlayer() {
-            // Movement direction
-            const forward = new THREE.Vector3(
-                Math.sin(player.yaw),
-                0,
-                Math.cos(player.yaw)
-            );
-            const right = new THREE.Vector3(
-                Math.sin(player.yaw + Math.PI / 2),
-                0,
-                Math.cos(player.yaw + Math.PI / 2)
-            );
-            
-            // Input
-            const speed = keys['ShiftLeft'] ? player.speed * player.sprintMultiplier : player.speed;
-            
-            if (keys['KeyW']) {
-                player.velocity.x += forward.x * speed;
-                player.velocity.z += forward.z * speed;
-            }
-            if (keys['KeyS']) {
-                player.velocity.x -= forward.x * speed;
-                player.velocity.z -= forward.z * speed;
-            }
-            if (keys['KeyA']) {
-                player.velocity.x -= right.x * speed;
-                player.velocity.z -= right.z * speed;
-            }
-            if (keys['KeyD']) {
-                player.velocity.x += right.x * speed;
-                player.velocity.z += right.z * speed;
-            }
-            if (keys['Space'] && player.onGround) {
-                player.velocity.y = player.jumpForce;
-                player.onGround = false;
-            }
-            
-            // Gravity
-            player.velocity.y += player.gravity;
-            
-            // Apply velocity
-            player.position.add(player.velocity);
-            
-            // Friction
-            player.velocity.x *= 0.85;
-            player.velocity.z *= 0.85;
-            
-            // Ground collision
-            const groundHeight = getTerrainHeight(player.position.x, player.position.z) + 1.7;
-            if (player.position.y < groundHeight) {
-                player.position.y = groundHeight;
-                player.velocity.y = 0;
-                player.onGround = true;
-            }
-            
-            // Keep in bounds
-            const bound = TERRAIN_SIZE / 2 - 10;
-            player.position.x = Math.max(-bound, Math.min(bound, player.position.x));
-            player.position.z = Math.max(-bound, Math.min(bound, player.position.z));
-            
-            // Update camera
-            camera.position.copy(player.position);
-            camera.rotation.order = 'YXZ';
-            camera.rotation.y = player.yaw;
-            camera.rotation.x = player.pitch;
-        }
-
-        function updateUI() {
-            // Compass
-            const compassRotation = -player.yaw * (180 / Math.PI);
-            document.getElementById('compassNeedle').style.transform = 
-                `translate(-50%, -100%) rotate(${compassRotation}deg)`;
-            
-            // Coordinates
-            const lat = (44.9778 + player.position.z * 0.001).toFixed(4);
-            const lng = (93.2650 + player.position.x * 0.001).toFixed(4);
-            document.getElementById('coords').textContent = `${lat}° N, ${lng}° W`;
-            
-            // Elevation
-            const elevation = Math.floor(1200 + player.position.y * 10);
-            document.getElementById('elevation').textContent = elevation.toLocaleString() + ' ft';
-            
-            // Biome
-            const height = getTerrainHeight(player.position.x, player.position.z);
-            let biome = 'Lake Shore';
-            if (height > 20) biome = 'Highland';
-            else if (height > 10) biome = 'Boreal Forest';
-            else if (height > 2) biome = 'Mixed Forest';
-            else if (height > 0) biome = 'Wetland';
-            document.getElementById('biome').textContent = biome;
-            
-            // Time
-            const gameHours = 6 + (time * 0.01) % 12;
-            const hours = Math.floor(gameHours);
-            const minutes = Math.floor((gameHours % 1) * 60);
-            document.getElementById('envTime').textContent = 
-                String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
-            
-            // Consciousness bars
-            const cons = 70 + Math.sin(time * 0.5) * 20;
-            const sig = 85 + Math.sin(time * 0.3) * 10;
-            document.getElementById('consFill').style.width = cons + '%';
-            document.getElementById('sigFill').style.width = sig + '%';
-            
-            // Agent nearby (random appearance)
-            if (Math.random() < 0.001) {
-                document.getElementById('agentNearby').classList.add('visible');
-                setTimeout(() => {
-                    document.getElementById('agentNearby').classList.remove('visible');
-                }, 3000);
-            }
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.016;
-            
-            updatePlayer();
-            
-            // Update shader uniforms
-            if (sky.material.uniforms) sky.material.uniforms.time.value = time;
-            if (water.material.uniforms) water.material.uniforms.time.value = time;
-            
-            // Animate particles
-            if (particles) {
-                const positions = particles.geometry.attributes.position.array;
-                for (let i = 0; i < positions.length; i += 3) {
-                    positions[i + 1] += Math.sin(time + i) * 0.01;
-                }
-                particles.geometry.attributes.position.needsUpdate = true;
-            }
-
-            // Animate AI Models
-            scene.traverse((obj) => {
-                if (obj.userData.type === 'aiModel') {
-                    // Update shader time
-                    if (obj.material.uniforms && obj.material.uniforms.time) {
-                        obj.material.uniforms.time.value = time;
-                    }
-                    // Gentle floating motion
-                    obj.position.y += Math.sin(time + obj.position.x) * 0.002;
-                    // Slow rotation
-                    obj.rotation.y += 0.005;
-                } else if (obj.userData.type === 'aiModelRing') {
-                    // Rotate orbital rings
-                    obj.rotation.z += 0.01;
-                }
-            });
-
-            // Update sky position to follow player
-            sky.position.copy(player.position);
-            
-            updateUI();
-            renderer.render(scene, camera);
-        }
-
-        // Start
-        init();
     </script>
 
 </body>
