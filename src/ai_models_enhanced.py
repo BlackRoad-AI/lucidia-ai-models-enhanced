@@ -1,6 +1,6 @@
 """
 Lucidia AI Models Enhanced — Advanced model pipeline with quantization,
-LoRA adapter management, and fine-tuning tracker.
+LoRA adapter management, fine-tuning tracker, and Ollama @mention routing.
 """
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ import argparse
 import json
 import sqlite3
 import time
+import urllib.error
+import urllib.request
 import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -20,6 +22,64 @@ C = "\033[0;36m"; B = "\033[0;34m"; M = "\033[0;35m"; NC = "\033[0m"
 BOLD = "\033[1m"
 
 DB_PATH = Path.home() / ".blackroad" / "ai_models_enhanced.db"
+OLLAMA_BASE_URL = "http://localhost:11434"
+
+
+# ── Ollama @mention router ────────────────────────────────────────────────────
+class OllamaRouter:
+    """Route @mention prompts directly to a local Ollama instance.
+
+    Recognized mentions — ``@copilot``, ``@lucidia``, ``@blackboxprogramming``
+    — are stripped from the prompt before dispatch so that Ollama receives only
+    the plain query.  No external provider is ever contacted.
+    """
+
+    MENTIONS: frozenset = frozenset({"@copilot", "@lucidia", "@blackboxprogramming"})
+
+    def __init__(self, base_url: str = OLLAMA_BASE_URL, model: str = "llama3") -> None:
+        self.base_url = base_url.rstrip("/")
+        self.model = model
+
+    # ── helpers ───────────────────────────────────────────────────────────────
+
+    @classmethod
+    def detect_mention(cls, prompt: str) -> bool:
+        """Return *True* if *prompt* begins with a recognised @mention."""
+        first = prompt.strip().split(None, 1)[0].lower() if prompt.strip() else ""
+        return first in cls.MENTIONS
+
+    @classmethod
+    def strip_mention(cls, prompt: str) -> str:
+        """Remove the leading @mention token from *prompt*, if present."""
+        parts = prompt.strip().split(None, 1)
+        if len(parts) > 1 and parts[0].lower() in cls.MENTIONS:
+            return parts[1]
+        return prompt.strip()
+
+    # ── main dispatch ─────────────────────────────────────────────────────────
+
+    def chat(self, prompt: str) -> dict:
+        """Send *prompt* to Ollama ``/api/generate`` and return the response dict.
+
+        The @mention prefix is stripped automatically.  This method uses only
+        the standard-library ``urllib`` — no third-party HTTP client required.
+
+        Raises ``urllib.error.URLError`` / ``urllib.error.HTTPError`` if Ollama
+        is unreachable, so the caller can surface a clear error instead of a
+        confusing traceback from an unrelated provider.
+        """
+        clean = self.strip_mention(prompt)
+        payload = json.dumps(
+            {"model": self.model, "prompt": clean, "stream": False}
+        ).encode()
+        req = urllib.request.Request(
+            f"{self.base_url}/api/generate",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return json.loads(resp.read())
 
 
 # ── Data models ───────────────────────────────────────────────────────────────
@@ -323,6 +383,16 @@ def main() -> None:
     adp = sub.add_parser("adapters", help="List LoRA adapters")
     adp.add_argument("--model-id", default=None)
 
+    cht = sub.add_parser(
+        "chat",
+        help="Send a prompt to local Ollama (@copilot / @lucidia / @blackboxprogramming)"
+    )
+    cht.add_argument("prompt", help="Prompt text, optionally prefixed with @mention")
+    cht.add_argument("--ollama-url", default=OLLAMA_BASE_URL,
+                     help="Base URL of the local Ollama server")
+    cht.add_argument("--model", default="llama3",
+                     help="Ollama model name (default: llama3)")
+
     args = parser.parse_args()
     pipeline = EnhancedModelPipeline()
 
@@ -370,6 +440,21 @@ def main() -> None:
                 merged_flag = f" {G}[merged]{NC}" if a.merged else ""
                 print(f"  {C}{a.adapter_id}{NC} {BOLD}{a.name}{NC} "
                       f"rank={a.rank} α={a.alpha}{merged_flag}")
+
+        elif args.cmd == "chat":
+            router = OllamaRouter(base_url=args.ollama_url, model=args.model)
+            prompt = args.prompt
+            mention_used = OllamaRouter.detect_mention(prompt)
+            parts = prompt.strip().split(None, 1)
+            mention_tag = parts[0] if mention_used and parts else "@ollama"
+            print(f"{C}▶{NC} Routing {BOLD}{mention_tag}{NC} → "
+                  f"Ollama [{args.ollama_url}] model={args.model}")
+            try:
+                result = router.chat(prompt)
+                print(f"\n{G}{result.get('response', result)}{NC}")
+            except urllib.error.URLError as exc:
+                print(f"{R}✗{NC} Could not reach Ollama at {args.ollama_url}: {exc.reason}")
+                raise SystemExit(1)
 
     finally:
         pipeline.close()

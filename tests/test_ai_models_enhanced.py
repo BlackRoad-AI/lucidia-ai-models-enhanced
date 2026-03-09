@@ -1,13 +1,17 @@
 """Tests for src/ai_models_enhanced.py — Lucidia Enhanced Model Pipeline."""
+import io
 import json
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from ai_models_enhanced import (
     QuantizationConfig, LoRAAdapter, FineTuneJob,
-    PipelineStage, EnhancedModelPipeline,
+    PipelineStage, EnhancedModelPipeline, OllamaRouter, OLLAMA_BASE_URL,
 )
 
 
@@ -147,3 +151,107 @@ def test_export_creates_json(pipeline, tmp_path):
     assert data["model_id"] == "exp-model"
     assert data["quantizations"] == 1
     assert "exported_at" in data
+
+
+# ── OllamaRouter ──────────────────────────────────────────────────────────────
+def test_ollama_base_url_default():
+    assert OLLAMA_BASE_URL == "http://localhost:11434"
+
+
+@pytest.mark.parametrize("mention", ["@copilot", "@lucidia", "@blackboxprogramming"])
+def test_detect_mention_true(mention):
+    assert OllamaRouter.detect_mention(f"{mention} hello world")
+
+
+@pytest.mark.parametrize("mention", ["@copilot", "@lucidia", "@blackboxprogramming"])
+def test_detect_mention_case_insensitive(mention):
+    assert OllamaRouter.detect_mention(f"{mention.upper()} hello")
+
+
+def test_detect_mention_false_for_plain_prompt():
+    assert not OllamaRouter.detect_mention("hello world")
+
+
+def test_detect_mention_false_for_unknown_mention():
+    assert not OllamaRouter.detect_mention("@openai tell me something")
+
+
+@pytest.mark.parametrize("mention", ["@copilot", "@lucidia", "@blackboxprogramming"])
+def test_strip_mention_removes_prefix(mention):
+    result = OllamaRouter.strip_mention(f"{mention} what is 2+2?")
+    assert result == "what is 2+2?"
+
+
+def test_strip_mention_no_op_when_no_mention():
+    result = OllamaRouter.strip_mention("just a plain question")
+    assert result == "just a plain question"
+
+
+def _make_ollama_response(text: str, model: str = "llama3") -> MagicMock:
+    """Build a mock urllib response object for Ollama."""
+    body = json.dumps({"model": model, "response": text, "done": True}).encode()
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = body
+    mock_resp.__enter__ = lambda s: s
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    return mock_resp
+
+
+@patch("urllib.request.urlopen")
+def test_chat_sends_to_ollama(mock_urlopen):
+    mock_urlopen.return_value = _make_ollama_response("4")
+    router = OllamaRouter()
+    result = router.chat("@lucidia what is 2+2?")
+    assert result["response"] == "4"
+    # Confirm request went to local Ollama, not any external provider
+    call_args = mock_urlopen.call_args
+    req = call_args[0][0]
+    assert req.full_url == "http://localhost:11434/api/generate"
+    assert req.method == "POST"
+
+
+@patch("urllib.request.urlopen")
+def test_chat_strips_mention_before_dispatch(mock_urlopen):
+    mock_urlopen.return_value = _make_ollama_response("pong")
+    router = OllamaRouter()
+    router.chat("@copilot ping")
+    req = mock_urlopen.call_args[0][0]
+    payload = json.loads(req.data.decode())
+    assert payload["prompt"] == "ping"
+
+
+@patch("urllib.request.urlopen")
+def test_chat_uses_configured_model(mock_urlopen):
+    mock_urlopen.return_value = _make_ollama_response("ok", model="mistral")
+    router = OllamaRouter(model="mistral")
+    router.chat("@blackboxprogramming hi")
+    req = mock_urlopen.call_args[0][0]
+    payload = json.loads(req.data.decode())
+    assert payload["model"] == "mistral"
+
+
+@patch("urllib.request.urlopen")
+def test_chat_uses_custom_base_url(mock_urlopen):
+    mock_urlopen.return_value = _make_ollama_response("ok")
+    router = OllamaRouter(base_url="http://192.168.1.10:11434")
+    router.chat("@lucidia hello")
+    req = mock_urlopen.call_args[0][0]
+    assert req.full_url == "http://192.168.1.10:11434/api/generate"
+
+
+@patch("urllib.request.urlopen")
+def test_chat_raises_url_error_when_ollama_unreachable(mock_urlopen):
+    mock_urlopen.side_effect = urllib.error.URLError("Connection refused")
+    router = OllamaRouter()
+    with pytest.raises(urllib.error.URLError):
+        router.chat("@lucidia are you there?")
+
+
+def test_ollama_router_no_external_imports():
+    """OllamaRouter must rely only on stdlib — no third-party HTTP client."""
+    import importlib
+    import ai_models_enhanced as mod
+    # Verify no requests/httpx/aiohttp usage exists in the module source
+    source = Path(mod.__file__).read_text()
+    for lib in ("import requests", "import httpx", "import aiohttp"):
+        assert lib not in source, f"External HTTP library '{lib}' found in source"
