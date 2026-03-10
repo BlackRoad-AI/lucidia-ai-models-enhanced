@@ -1,12 +1,6 @@
-FROM node:20-alpine AS builder
+FROM python:3.11-slim
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-RUN npm run build --if-present
-
-FROM node:20-alpine
-WORKDIR /app
-COPY --from=builder /app .
-EXPOSE 3000
-CMD ["node", "src/index.js"]
+CMD ["python", "src/ai_models_enhanced.py", "--help"]

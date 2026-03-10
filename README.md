@@ -319,7 +319,7 @@ pipeline.close()
 ```bash
 pytest tests/test_ai_models_enhanced.py -v
 
-# Expected: 18 passed
+# Expected: 37 passed
 ```
 
 ---

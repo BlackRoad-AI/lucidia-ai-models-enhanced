@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 import uuid
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -93,7 +93,7 @@ class QuantizationConfig:
     desc_act: bool = False
     size_reduction_pct: float = 0.0
     perplexity_delta: float = 0.0
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 @dataclass
@@ -109,7 +109,7 @@ class LoRAAdapter:
     base_model_params: int = 0
     checkpoint_path: str = ""
     merged: bool = False
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 @dataclass
@@ -126,7 +126,7 @@ class FineTuneJob:
     eval_loss: float = 0.0
     best_checkpoint: str = ""
     duration_s: float = 0.0
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     completed_at: Optional[str] = None
 
 
@@ -249,7 +249,7 @@ class EnhancedModelPipeline:
         job.duration_s = round(time.perf_counter() - t0, 3)
         job.status = "completed"
         job.best_checkpoint = f"checkpoints/{job.job_id}/best"
-        job.completed_at = datetime.utcnow().isoformat()
+        job.completed_at = datetime.now(timezone.utc).isoformat()
         self._conn.execute(
             "INSERT OR REPLACE INTO finetune_jobs VALUES "
             "(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -316,7 +316,7 @@ class EnhancedModelPipeline:
         out = output_path or f"{model_id}_export.json"
         export_data = {
             "model_id": model_id,
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
             "quantizations": len(quants),
             "adapters": len(adapters),
             "completed_jobs": len(jobs),

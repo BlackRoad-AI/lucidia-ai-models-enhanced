@@ -47,6 +47,12 @@ def test_quantize_awq(pipeline):
     assert result.perplexity_delta == 0.25
 
 
+def test_quantize_bnb(pipeline):
+    result = pipeline.quantize_model(QuantizationConfig(model_id="m3", method="bnb"))
+    assert result.size_reduction_pct == 50.0
+    assert result.perplexity_delta == 0.12
+
+
 def test_quantize_stores_to_db(pipeline):
     pipeline.quantize_model(QuantizationConfig(model_id="stored-model", method="int8"))
     row = pipeline._conn.execute(
