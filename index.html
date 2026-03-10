@@ -344,42 +344,231 @@
             50% { opacity: 0.3; }
         }
 
-        /* Click to start */
+        /* Portal Hub — product landing page */
         .click-start {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: linear-gradient(160deg, #0a0a14 0%, #12001a 60%, #0a0a14 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            overflow-y: auto;
             z-index: 1000;
-            cursor: pointer;
+            padding: 40px 24px 60px;
         }
 
         .click-start.hidden {
             display: none;
         }
 
-        .start-title {
-            font-size: 48px;
-            font-weight: 200;
-            background: linear-gradient(135deg, #FF1D6C, #F5A623, #9C27B0);
+        .portal-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .portal-brand-name {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            background: linear-gradient(135deg, #FF1D6C, #F5A623);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
         }
 
-        .start-sub {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 40px;
+        .portal-brand-tag {
+            font-size: 11px;
+            letter-spacing: 0.25em;
+            color: rgba(255,255,255,0.35);
+            text-transform: uppercase;
+            margin-top: 4px;
         }
 
-        .start-hint {
+        .portal-headline {
+            font-size: 22px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.75);
+            text-align: center;
+            margin-bottom: 36px;
+            max-width: 540px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+            width: 100%;
+            max-width: 960px;
+            margin-bottom: 36px;
+        }
+
+        .product-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 12px;
+            padding: 18px 20px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            background: rgba(255,29,108,0.12);
+            border-color: rgba(255,29,108,0.4);
+            transform: translateY(-2px);
+        }
+
+        .product-card-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .product-card-desc {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.3);
-            animation: pulse 2s ease infinite;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.4;
+        }
+
+        .product-card-price {
+            margin-top: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            align-self: flex-start;
+        }
+
+        .product-card-price.free {
+            background: rgba(76,175,80,0.2);
+            color: #4CAF50;
+            border: 1px solid rgba(76,175,80,0.3);
+        }
+
+        .product-card-price.paid {
+            background: rgba(255,29,108,0.15);
+            color: #FF1D6C;
+            border: 1px solid rgba(255,29,108,0.25);
+        }
+
+        .product-card-arrow {
+            margin-top: auto;
+            padding-top: 8px;
+            font-size: 11px;
+            color: rgba(255,29,108,0.6);
+        }
+
+        .enter-3d-btn {
+            background: transparent;
+            border: 1px solid rgba(255,29,108,0.5);
+            color: rgba(255,255,255,0.6);
+            font-family: inherit;
+            font-size: 13px;
+            padding: 10px 28px;
+            border-radius: 30px;
+            cursor: pointer;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+        }
+
+        .enter-3d-btn:hover {
+            border-color: #FF1D6C;
+            color: #FF1D6C;
+            background: rgba(255,29,108,0.08);
+        }
+
+        /* Floating Hub button (visible in 3D world) */
+        .hub-btn {
+            position: fixed;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,29,108,0.35);
+            color: rgba(255,255,255,0.7);
+            font-family: inherit;
+            font-size: 11px;
+            padding: 7px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            z-index: 200;
+            display: none;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+        }
+
+        .hub-btn:hover {
+            background: rgba(255,29,108,0.2);
+            border-color: #FF1D6C;
+            color: #FF1D6C;
+        }
+
+        .hub-btn.visible {
+            display: block;
+        }
+
+        /* Nearby model portal card */
+        .model-portal {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.82);
+            border: 1px solid rgba(255,29,108,0.35);
+            border-radius: 14px;
+            padding: 16px 22px;
+            min-width: 260px;
+            max-width: 340px;
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: all;
+        }
+
+        .model-portal.visible {
+            display: flex;
+        }
+
+        .model-portal-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .model-portal-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+        }
+
+        .model-portal-link {
+            margin-top: 8px;
+            display: inline-block;
+            background: linear-gradient(135deg, #FF1D6C, #F5A623);
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 20px;
+            text-align: center;
+            letter-spacing: 0.05em;
+            transition: opacity 0.2s;
+        }
+
+        .model-portal-link:hover {
+            opacity: 0.85;
+        }
+
+        .model-portal-hint {
+            font-size: 10px;
+            color: rgba(255,255,255,0.25);
+            text-align: center;
         }
 
         /* Scan lines */
@@ -410,11 +599,113 @@
 </head>
 <body>
 
-    <!-- Click to Start -->
+    <!-- Portal Hub — shown on load -->
     <div class="click-start" id="clickStart">
-        <div class="start-title">Minnesota Wilderness</div>
-        <div class="start-sub">Lucidia • 11 AI Models Living Here</div>
-        <div class="start-hint">Click to enter</div>
+
+        <div class="portal-brand">
+            <div class="portal-brand-name">LUCIDIA</div>
+            <div class="portal-brand-tag">BlackRoad AI · 11 Models · One Universe</div>
+        </div>
+
+        <p class="portal-headline">
+            Explore AI tools built for real life — creative, productive, and actually fun to use.
+            Click any card to open a product, or explore all 11 in 3D.
+        </p>
+
+        <div class="product-grid" id="productGrid">
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">🛣️ RoadCommand</div>
+                <div class="product-card-desc">Your AI operations hub — control every tool from one place.</div>
+                <div class="product-card-price paid">Operations Platform</div>
+                <div class="product-card-arrow">Open Portal →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">📚 RoadWork</div>
+                <div class="product-card-desc">AI tutoring that actually teaches you. For every skill level.</div>
+                <div class="product-card-price paid">$9 / month</div>
+                <div class="product-card-arrow">Start Learning →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">⚙️ PitStop</div>
+                <div class="product-card-desc">DevOps dashboard that shows you exactly what's broken and why.</div>
+                <div class="product-card-price paid">$29 / month</div>
+                <div class="product-card-arrow">Open Dashboard →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">✦ FastLane</div>
+                <div class="product-card-desc">Design tool with AI built in. No skills required, just ideas.</div>
+                <div class="product-card-price free">FREE</div>
+                <div class="product-card-arrow">Start Designing →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">🔗 BackRoad</div>
+                <div class="product-card-desc">Social platform where your AI persona lives alongside you.</div>
+                <div class="product-card-price paid">$15 / month</div>
+                <div class="product-card-arrow">Join Community →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">🔌 LoadRoad</div>
+                <div class="product-card-desc">Connect any enterprise tool in minutes. No engineers needed.</div>
+                <div class="product-card-price paid">$99 / month</div>
+                <div class="product-card-arrow">Connect Now →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">🪙 RoadCoin</div>
+                <div class="product-card-desc">Get paid for your creativity. AI-powered creator payments.</div>
+                <div class="product-card-price free">FREE</div>
+                <div class="product-card-arrow">Get Paid →</div>
+            </a>
+
+            <a class="product-card" href="https://lucidia.earth" target="_blank" rel="noopener">
+                <div class="product-card-name">🌸 Lucidia</div>
+                <div class="product-card-desc">Your personal AI companion — she listens, thinks, and grows with you.</div>
+                <div class="product-card-price paid">$29 / month</div>
+                <div class="product-card-arrow">Meet Lucidia →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">📄 RoadFlow</div>
+                <div class="product-card-desc">Document AI that reads, writes, and summarizes anything for you.</div>
+                <div class="product-card-price paid">$15 / month</div>
+                <div class="product-card-arrow">Try RoadFlow →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">🎬 Video Studio</div>
+                <div class="product-card-desc">Edit videos with AI — cut, caption, and publish in minutes.</div>
+                <div class="product-card-price paid">$19 / month</div>
+                <div class="product-card-arrow">Open Studio →</div>
+            </a>
+
+            <a class="product-card" href="https://blackroad.io" target="_blank" rel="noopener">
+                <div class="product-card-name">✍️ Writing Studio</div>
+                <div class="product-card-desc">AI writing tool that sounds like you, not a robot.</div>
+                <div class="product-card-price paid">$12 / month</div>
+                <div class="product-card-arrow">Start Writing →</div>
+            </a>
+
+        </div>
+
+        <button class="enter-3d-btn" id="enter3dBtn">✦ Explore in 3D World</button>
+
+    </div>
+
+    <!-- Floating hub button (visible while in 3D world) -->
+    <button class="hub-btn" id="hubBtn">◎ Back to Hub</button>
+
+    <!-- Model portal card (appears when near a model in 3D) -->
+    <div class="model-portal" id="modelPortal">
+        <div class="model-portal-name" id="portalName"></div>
+        <div class="model-portal-desc" id="portalDesc"></div>
+        <a class="model-portal-link" id="portalLink" href="#" target="_blank" rel="noopener">Open Portal →</a>
+        <div class="model-portal-hint">Walk away to dismiss</div>
     </div>
 
     <!-- Canvas -->
@@ -608,9 +899,20 @@
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('pointerlockchange', onPointerLockChange);
 
-            document.getElementById('clickStart').addEventListener('click', () => {
+            // "Explore in 3D" button enters the world
+            document.getElementById('enter3dBtn').addEventListener('click', function(e) {
+                e.stopPropagation();
                 document.getElementById('clickStart').classList.add('hidden');
+                document.getElementById('hubBtn').classList.add('visible');
                 renderer.domElement.requestPointerLock();
+            });
+
+            // Hub button exits 3D and shows the portal hub
+            document.getElementById('hubBtn').addEventListener('click', function() {
+                if (document.pointerLockElement) document.exitPointerLock();
+                document.getElementById('clickStart').classList.remove('hidden');
+                document.getElementById('hubBtn').classList.remove('visible');
+                document.getElementById('modelPortal').classList.remove('visible');
             });
 
             animate();
@@ -1039,23 +1341,23 @@
             }
         }
 
-        function createAIModels() {
-            // All 11 BlackRoad AI Models as glowing entities in 3D space
-            const models = [
-                { name: 'RoadCommand', color: 0xFF1D6C, size: 3.0, x: 0, z: 0, label: 'AI Operations Platform' },
-                { name: 'RoadWork', color: 0xF5A623, size: 2.0, x: -30, z: 20, label: 'AI Tutoring - $9/mo' },
-                { name: 'PitStop', color: 0x2979FF, size: 2.2, x: 35, z: -15, label: 'DevOps Dashboard - $29/mo' },
-                { name: 'FastLane', color: 0x9C27B0, size: 1.9, x: -25, z: -30, label: 'Design Tool - FREE' },
-                { name: 'BackRoad', color: 0xFF9D00, size: 2.0, x: 40, z: 25, label: 'Social Platform - $15/mo' },
-                { name: 'LoadRoad', color: 0x4CAF50, size: 2.3, x: -40, z: -10, label: 'Enterprise Connectors - $99/mo' },
-                { name: 'RoadCoin', color: 0xFFD700, size: 1.8, x: 20, z: 40, label: 'Creator Payments - FREE' },
-                { name: 'Lucidia', color: 0xFF1D6C, size: 2.5, x: -15, z: 35, label: 'AI Companion - $29/mo' },
-                { name: 'RoadFlow', color: 0x00BCD4, size: 2.0, x: 30, z: -35, label: 'Document AI - $15/mo' },
-                { name: 'Video Studio', color: 0x9C27B0, size: 2.1, x: -35, z: 15, label: 'Creator Editor - $19/mo' },
-                { name: 'Writing Studio', color: 0x00E5FF, size: 1.9, x: 25, z: -25, label: 'AI Writing - $12/mo' }
-            ];
+        // All 11 BlackRoad AI Models — referenced in 3D world and proximity portal
+        const AI_MODELS = [
+            { name: 'RoadCommand', color: 0xFF1D6C, size: 3.0, x: 0,   z: 0,   label: 'AI Operations Platform',      url: 'https://blackroad.io' },
+            { name: 'RoadWork',    color: 0xF5A623, size: 2.0, x: -30, z: 20,  label: 'AI Tutoring - $9/mo',         url: 'https://blackroad.io' },
+            { name: 'PitStop',     color: 0x2979FF, size: 2.2, x: 35,  z: -15, label: 'DevOps Dashboard - $29/mo',   url: 'https://blackroad.io' },
+            { name: 'FastLane',    color: 0x9C27B0, size: 1.9, x: -25, z: -30, label: 'Design Tool - FREE',          url: 'https://blackroad.io' },
+            { name: 'BackRoad',    color: 0xFF9D00, size: 2.0, x: 40,  z: 25,  label: 'Social Platform - $15/mo',    url: 'https://blackroad.io' },
+            { name: 'LoadRoad',    color: 0x4CAF50, size: 2.3, x: -40, z: -10, label: 'Enterprise Connectors - $99/mo', url: 'https://blackroad.io' },
+            { name: 'RoadCoin',    color: 0xFFD700, size: 1.8, x: 20,  z: 40,  label: 'Creator Payments - FREE',     url: 'https://blackroad.io' },
+            { name: 'Lucidia',     color: 0xFF1D6C, size: 2.5, x: -15, z: 35,  label: 'AI Companion - $29/mo',       url: 'https://lucidia.earth' },
+            { name: 'RoadFlow',    color: 0x00BCD4, size: 2.0, x: 30,  z: -35, label: 'Document AI - $15/mo',        url: 'https://blackroad.io' },
+            { name: 'Video Studio',color: 0x9C27B0, size: 2.1, x: -35, z: 15,  label: 'Creator Editor - $19/mo',     url: 'https://blackroad.io' },
+            { name: 'Writing Studio', color: 0x00E5FF, size: 1.9, x: 25, z: -25, label: 'AI Writing - $12/mo',       url: 'https://blackroad.io' }
+        ];
 
-            models.forEach((model, index) => {
+        function createAIModels() {
+            AI_MODELS.forEach((model, index) => {
                 const height = getTerrainHeight(model.x, model.z) + 5;
 
                 // Main glowing sphere
@@ -1094,7 +1396,7 @@
 
                 const sphere = new THREE.Mesh(sphereGeo, sphereMat);
                 sphere.position.set(model.x, height, model.z);
-                sphere.userData = { type: 'aiModel', name: model.name, label: model.label, time: 0 };
+                sphere.userData = { type: 'aiModel', name: model.name, label: model.label, url: model.url, time: 0 };
                 scene.add(sphere);
 
                 // Orbital ring
@@ -1283,7 +1585,30 @@
             const sig = 85 + Math.sin(time * 0.3) * 10;
             document.getElementById('consFill').style.width = cons + '%';
             document.getElementById('sigFill').style.width = sig + '%';
-            
+
+            // Proximity-based model portal card
+            const PORTAL_DISTANCE = 18;
+            let nearestModel = null;
+            let nearestDist = Infinity;
+            AI_MODELS.forEach((m) => {
+                const dx = player.position.x - m.x;
+                const dz = player.position.z - m.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                if (dist < PORTAL_DISTANCE && dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestModel = m;
+                }
+            });
+            const portalEl = document.getElementById('modelPortal');
+            if (nearestModel) {
+                document.getElementById('portalName').textContent = nearestModel.name;
+                document.getElementById('portalDesc').textContent = nearestModel.label;
+                document.getElementById('portalLink').href = nearestModel.url;
+                portalEl.classList.add('visible');
+            } else {
+                portalEl.classList.remove('visible');
+            }
+
             // Agent nearby (random appearance)
             if (Math.random() < 0.001) {
                 document.getElementById('agentNearby').classList.add('visible');
