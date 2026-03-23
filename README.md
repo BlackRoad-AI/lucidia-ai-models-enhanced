@@ -1,5 +1,13 @@
 # lucidia-ai-models-enhanced
 
+> 🖤 Enhanced Lucidia AI models with BlackRoad optimizations
+
+Part of the [BlackRoad OS](https://blackroad.io) ecosystem — [BlackRoad-AI](https://github.com/BlackRoad-AI)
+
+---
+
+# lucidia-ai-models-enhanced
+
 🖤 Enhanced Lucidia AI models with BlackRoad optimizations
 
 **BlackRoad-AI** — AI — models, inference, agents
